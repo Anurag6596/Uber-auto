@@ -3,7 +3,7 @@ import { CaptainDataContext } from '../context/CaptainContext'
 import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
 
-const CaptainProtectedWrapper = ({
+const CaptainProtectWrapper = ({
     children
 }) => {
 
@@ -12,41 +12,46 @@ const CaptainProtectedWrapper = ({
     const { captain, setCaptain } = useContext(CaptainDataContext)
     const [ isLoading, setIsLoading ] = useState(true)
 
-    // console.log(token);
-    
+
+
+
     useEffect(() => {
         if (!token) {
             navigate('/captainlogin')
         }
+
+        axios.get(`${import.meta.env.VITE_BASE_URL}/captains/profile`, {
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        }).then(response => {
+            if (response.status === 200) {
+                setCaptain(response.data.captain)
+                setIsLoading(false)
+            }
+        })
+            .catch(err => {
+
+                localStorage.removeItem('token')
+                navigate('/captainlogin')
+            })
     }, [ token ])
 
-    axios.get(`${import.meta.env.VITE_BASE_URL}/captains/profile`,{
-        headers: {
-            Authorization: `Bearer ${token}`
-        }
-    }).then(response=>{
-        if(response.status === 200) {
-            setCaptain(response.data.captain)
-            setIsLoading(false)
-        }
-    })
-    .catch(err => {
-        console.log(err)
-        localStorage.removeItem('token')
-        navigate('/captainlogin')
-        })
+    
 
-    if(isLoading) {
+    if (isLoading) {
         return (
-        <div>Loading...</div>
+            <div>Loading...</div>
         )
     }
 
-  return (
-    <>
-        {children}
-    </>
-  )
+
+
+    return (
+        <>
+            {children}
+        </>
+    )
 }
 
-export default CaptainProtectedWrapper
+export default CaptainProtectWrapper
